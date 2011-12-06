@@ -1,0 +1,9 @@
+Package: com.understruction.appswitcherclearrecents
+Name: AppSwitcherClearRecents
+Depends: mobilesubstrate
+Version: 0.3.1
+Architecture: iphoneos-arm
+Description: Remove recently launched apps from the switcher. 
+Maintainer: EvilPenguin|
+Author: EvilPenguin|
+Section: Tweaks
