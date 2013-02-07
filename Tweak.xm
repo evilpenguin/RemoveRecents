@@ -1,6 +1,6 @@
 /*
  * Tweak: 	RemoveRecents
- * Version:	0.3.1
+ * Version:	0.3.2
  * Creator: EvilPenguin|
  * 
  * Enjoy :0)
@@ -8,7 +8,30 @@
 
 #import "RemoveRecents.h"
 
+%hook SBAppSwitcherBarView
+- (id)_iconForDisplayIdentifier:(id)displayIdentifier {
+	return %orig(displayIdentifier);
+}
+%end
+
 %hook SBAppSwitcherController
+//iOS 6
+- (id)_bundleIdentifiersForViewDisplay {
+	id appList = %orig;
+
+	NSMutableArray *newAppList = [NSMutableArray array];
+	SBApplicationController *appController = [objc_getClass("SBApplicationController") sharedInstance];
+
+	for (NSString *bundleIdentifier in appList) {
+		NSArray *apps = [appController applicationsWithBundleIdentifier:bundleIdentifier];
+		for (id app in apps) {
+			if ([app isRunning]) [newAppList addObject:bundleIdentifier];
+		}
+	}
+	
+	return newAppList;
+}
+
 // iOS 5
 - (id)_applicationIconsExceptTopApp {
 	id appList = %orig;
