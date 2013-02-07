@@ -8,12 +8,6 @@
 
 #import "RemoveRecents.h"
 
-%hook SBAppSwitcherBarView
-- (id)_iconForDisplayIdentifier:(id)displayIdentifier {
-	return %orig(displayIdentifier);
-}
-%end
-
 %hook SBAppSwitcherController
 //iOS 6
 - (id)_bundleIdentifiersForViewDisplay {
