@@ -1,12 +1,36 @@
 /*
  * Tweak: 	RemoveRecents
- * Version:	0.3.2
+ * Version:	0.3.3
  * Creator: EvilPenguin|
  * 
  * Enjoy :0)
  */
 
 #import "RemoveRecents.h"
+
+%hook SBAppSliderController 
+// iOS 7
+- (id)_beginAppListAccess { 
+	id appList = %orig;
+
+	NSMutableArray *newAppList = [NSMutableArray array];
+	SBApplicationController *appController = [objc_getClass("SBApplicationController") sharedInstance];
+
+	for (NSString *bundleIdentifier in appList) {
+		if ([bundleIdentifier rangeOfString:@"com.apple.springboard"].location != NSNotFound) {
+			[newAppList addObject:bundleIdentifier];
+		}
+		else {
+			NSArray *apps = [appController applicationsWithBundleIdentifier:bundleIdentifier];
+			for (id app in apps) {
+				if ([app isRunning]) [newAppList addObject:bundleIdentifier];
+			}
+		}
+	}
+
+	return newAppList; 
+}
+%end
 
 %hook SBAppSwitcherController
 //iOS 6

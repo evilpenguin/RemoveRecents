@@ -35,3 +35,7 @@
 @interface SBAppSwitcherBarView
 - (id)_iconForDisplayIdentifier:(id)displayIdentifier;
 @end
+
+@interface SBAppSliderController
+- (NSArray *)applicationList;
+@end
