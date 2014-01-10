@@ -1,6 +1,6 @@
 /*
  * Tweak: 	AppSwitcherClearRecents
- * Version:	0.3.2
+ * Version:	0.3.4
  * Creator: EvilPenguin|
  * 
  * Enjoy :0)
@@ -38,4 +38,5 @@
 
 @interface SBAppSliderController
 - (NSArray *)applicationList;
+- (id)_beginAppListAccess;
 @end
