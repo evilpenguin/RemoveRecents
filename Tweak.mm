@@ -37,16 +37,10 @@ static id removeRecentsAppListFromArray(id array) {
 #pragma mark -
 #pragma mark == Hooking ==
 
-%hook SBAppSliderController
-// iOS 7
-- (id)_beginAppListAccess {
-    id appList = %orig;
-    
-    return removeRecentsAppListFromArray(appList);
-}
-
-- (NSArray *) applicationList {
-    id appList = %orig;
+// iOS7
+%hook SBAppSwitcherModel
+- (id)snapshot {
+	id appList = %orig;
 
     return removeRecentsAppListFromArray(appList);
 }
