@@ -16,14 +16,29 @@ static id removeRecentsAppListFromArray(id array) {
         NSMutableArray *newAppList = [NSMutableArray array];
         SBApplicationController *appController = [%c(SBApplicationController) sharedInstance];
         
-        for (NSString *bundleIdentifier in array) {
-            if ([bundleIdentifier rangeOfString:@"com.apple.springboard"].location != NSNotFound) {
-                [newAppList addObject:bundleIdentifier];
+        if (kCFCoreFoundationVersionNumber >= 1140.10) {
+            // iOS 8+
+            for (SBDisplayLayout *layout in array) {
+                NSString *bundleIdentifier = [layout plistRepresentation][@"SBDisplayLayoutDisplayItemsPlistKey"][0][@"SBDisplayItemDisplayIdentifierPlistKey"];
+                if ([bundleIdentifier rangeOfString:@"com.apple.springboard"].location != NSNotFound) {
+                    [newAppList addObject:layout];
+                } else {
+                    if ([[appController applicationWithBundleIdentifier:bundleIdentifier] isRunning]) {
+                        [newAppList addObject:layout];
+                    }
+                }
             }
-            else {
-                NSArray *apps = [appController applicationsWithBundleIdentifier:bundleIdentifier];
-                for (id app in apps) {
-                    if ([app isRunning]) [newAppList addObject:bundleIdentifier];
+        } else {
+            // iOS 4-7
+            for (NSString *bundleIdentifier in array) {
+                if ([bundleIdentifier rangeOfString:@"com.apple.springboard"].location != NSNotFound) {
+                    [newAppList addObject:bundleIdentifier];
+                }
+                else {
+                    NSArray *apps = [appController applicationsWithBundleIdentifier:bundleIdentifier];
+                    for (id app in apps) {
+                        if ([app isRunning]) [newAppList addObject:bundleIdentifier];
+                    }
                 }
             }
         }
@@ -37,7 +52,7 @@ static id removeRecentsAppListFromArray(id array) {
 #pragma mark -
 #pragma mark == Hooking ==
 
-// iOS7
+// iOS 7, 8
 %hook SBAppSwitcherModel
 - (id)snapshot {
 	id appList = %orig;

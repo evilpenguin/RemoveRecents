@@ -28,8 +28,9 @@
 
 @interface SBApplicationController
 + (id)sharedInstance;
-- (id)applicationWithDisplayIdentifier:(id)displayIdentifier;
-- (id)applicationsWithBundleIdentifier:(id)bundleIdentifier;
+- (id)applicationWithDisplayIdentifier:(id)displayIdentifier;// iOS 4-7
+- (id)applicationsWithBundleIdentifier:(id)bundleIdentifier;// iOS 4-7
+- (id)applicationWithBundleIdentifier:(id)bundleIdentifier;// iOS 8+
 @end
 
 @interface SBAppSwitcherBarView
@@ -39,4 +40,8 @@
 @interface SBAppSliderController
 - (NSArray *)applicationList;
 - (id)_beginAppListAccess;
+@end
+
+@interface SBDisplayLayout
+- (NSDictionary *)plistRepresentation;
 @end
