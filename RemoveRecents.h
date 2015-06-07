@@ -6,6 +6,10 @@
  * Enjoy :0)
  */
 
+@interface SBDisplayLayout
+- (NSDictionary *)plistRepresentation;
+@end
+
 @interface SBProcess
 - (BOOL)isRunning;
 @end
@@ -30,6 +34,8 @@
 + (id)sharedInstance;
 - (id)applicationWithDisplayIdentifier:(id)displayIdentifier;
 - (id)applicationsWithBundleIdentifier:(id)bundleIdentifier;
+- (id)applicationWithBundleIdentifier:(id)bundleIdentifier;
+- (BOOL) respondsToSelector:(SEL)selector;
 @end
 
 @interface SBAppSwitcherBarView
@@ -40,3 +46,4 @@
 - (NSArray *)applicationList;
 - (id)_beginAppListAccess;
 @end
+

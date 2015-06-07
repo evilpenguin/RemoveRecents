@@ -1,7 +1,7 @@
 /*
  * Tweak: 	RemoveRecents
- * Version:	0.3.4
- * Creator: EvilPenguin|
+ * Version:	0.4.0
+ * Creator: EvilPenguin (James Emrich)
  * 
  * Enjoy :0)
  */
@@ -9,65 +9,87 @@
 #import "RemoveRecents.h"
 
 #pragma mark -
-#pragma mark == Public Methods ==
+#pragma mark == Public Functions ==
 
-static id removeRecentsAppListFromArray(id array) {
-    if (array != nil && [array count] > 0) {
+static id removeRecentsAppListFromArray(NSArray *array) {
+    if (array.count > 0) {
         NSMutableArray *newAppList = [NSMutableArray array];
         SBApplicationController *appController = [%c(SBApplicationController) sharedInstance];
         
-        for (NSString *bundleIdentifier in array) {
-            if ([bundleIdentifier rangeOfString:@"com.apple.springboard"].location != NSNotFound) {
-                [newAppList addObject:bundleIdentifier];
-            }
-            else {
-                NSArray *apps = [appController applicationsWithBundleIdentifier:bundleIdentifier];
-                for (id app in apps) {
-                    if ([app isRunning]) [newAppList addObject:bundleIdentifier];
+        for (id object in array) {
+		    NSString *bundleIdentifier = object;
+
+            // iOS8 Support
+ 	    	if (kCFCoreFoundationVersionNumber >= 1140.10 && [object isKindOfClass:%c(SBDisplayLayout)]) {
+                SBDisplayLayout *displayLayout = (SBDisplayLayout *)object;
+                NSDictionary *plistDict = [displayLayout plistRepresentation];
+                if (plistDict.count > 0) {
+                    NSArray *displayItemsArray = plistDict[@"SBDisplayLayoutDisplayItemsPlistKey"];
+                    if (displayItemsArray.count > 0) {
+                        NSDictionary *item = displayItemsArray[0];
+                        if (item.count > 0) {
+                            bundleIdentifier = item[@"SBDisplayItemDisplayIdentifierPlistKey"];
+                        }
+                    }
                 }
-            }
+			}
+
+            // Move along and remove the apps that are not running :)
+        	if ([bundleIdentifier rangeOfString:@"com.apple.springboard"].location != NSNotFound) {
+            	[newAppList addObject:object];
+       		}
+        	else {
+           		if ([appController respondsToSelector:@selector(applicationWithBundleIdentifier:)]) {
+					id app = [appController applicationWithBundleIdentifier:bundleIdentifier];
+					if ([app isRunning]) [newAppList addObject:object];
+				}
+				else {
+					NSArray *apps = [appController applicationsWithBundleIdentifier:bundleIdentifier];
+         			for (id app in apps) {
+            	    	if ([app isRunning]) [newAppList addObject:object];
+        	    	}
+				}
+    	    }
         }
         
         return newAppList;
     }
 
-    return nil;
+    return array;
 }
 
 #pragma mark -
 #pragma mark == Hooking ==
 
-// iOS7
+// iOS7, iOS8
 %hook SBAppSwitcherModel
-- (id)snapshot {
-	id appList = %orig;
-
+- (id) snapshot {
+    id appList = %orig;
     return removeRecentsAppListFromArray(appList);
 }
 %end
 
 %hook SBAppSwitcherController
 // iOS 6
-- (id)_bundleIdentifiersForViewDisplay {
+- (id) _bundleIdentifiersForViewDisplay {
 	id appList = %orig;
-
 	return removeRecentsAppListFromArray(appList);
 }
 
 // iOS 5
-- (id)_applicationIconsExceptTopApp {
+- (id) _applicationIconsExceptTopApp {
 	id appList = %orig;
 	
 	NSMutableArray *newAppList = [NSMutableArray array];
 	for (SBIconView *iconView in appList) {
 		id sbApplication = [iconView.icon application];
-		if ([[sbApplication process] isRunning]) [newAppList addObject:iconView];
+        if ([[sbApplication process] isRunning]) [newAppList addObject:iconView];
 	}
 	return newAppList;
 }
 
 // iOS 4
-- (id)_applicationIconsExcept:(id)application forOrientation:(int)orientation {
+- (id) _applicationIconsExcept:(id)application forOrientation:(int)orientation {
 	id appList = %orig(application, orientation);
 
 	NSMutableArray *newAppList = [NSMutableArray array];
@@ -77,3 +99,4 @@ static id removeRecentsAppListFromArray(id array) {
 	return newAppList;
 }
 %end
+
