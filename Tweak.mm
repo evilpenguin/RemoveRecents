@@ -11,7 +11,7 @@
 #pragma mark -
 #pragma mark == Public Functions ==
 
-static id removeRecentsAppListFromArray(NSArray *array) {
+static id RemoveRecentsEditAppListArray(NSArray *array, BOOL isRunningIOS8) {
     if (array.count > 0) {
         NSMutableArray *newAppList = [NSMutableArray array];
         SBApplicationController *appController = [%c(SBApplicationController) sharedInstance];
@@ -20,7 +20,8 @@ static id removeRecentsAppListFromArray(NSArray *array) {
 		    NSString *bundleIdentifier = object;
 
             // iOS8 Support
- 	    	if (kCFCoreFoundationVersionNumber >= 1140.10 && [object isKindOfClass:%c(SBDisplayLayout)]) {
+ 	    	if (isRunningIOS8) {
+                bundleIdentifier = nil; // set this to nil, so we do not crash below. 
                 SBDisplayLayout *displayLayout = (SBDisplayLayout *)object;
                 NSDictionary *plistDict = [displayLayout plistRepresentation];
                 if (plistDict.count > 0) {
@@ -39,7 +40,8 @@ static id removeRecentsAppListFromArray(NSArray *array) {
             	[newAppList addObject:object];
        		}
         	else {
-           		if ([appController respondsToSelector:@selector(applicationWithBundleIdentifier:)]) {
+           		// Use `applicationWithBundleIdentifier:` so we dont have to loop the array from `applicationsWithBundleIdentifier:`
+                if ([appController respondsToSelector:@selector(applicationWithBundleIdentifier:)]) {
 					id app = [appController applicationWithBundleIdentifier:bundleIdentifier];
 					if ([app isRunning]) [newAppList addObject:object];
 				}
@@ -65,7 +67,8 @@ static id removeRecentsAppListFromArray(NSArray *array) {
 %hook SBAppSwitcherModel
 - (id) snapshot {
     id appList = %orig;
-    return removeRecentsAppListFromArray(appList);
+    
+    return RemoveRecentsEditAppListArray(appList, kCFCoreFoundationVersionNumber >= 1140.10);
 }
 %end
 
@@ -73,7 +76,8 @@ static id removeRecentsAppListFromArray(NSArray *array) {
 // iOS 6
 - (id) _bundleIdentifiersForViewDisplay {
 	id appList = %orig;
-	return removeRecentsAppListFromArray(appList);
+	
+    return RemoveRecentsEditAppListArray(appList, kCFCoreFoundationVersionNumber >= 1140.10);
 }
 
 // iOS 5
@@ -85,7 +89,8 @@ static id removeRecentsAppListFromArray(NSArray *array) {
 		id sbApplication = [iconView.icon application];
         if ([[sbApplication process] isRunning]) [newAppList addObject:iconView];
 	}
-	return newAppList;
+	
+    return newAppList;
 }
 
 // iOS 4
@@ -96,7 +101,8 @@ static id removeRecentsAppListFromArray(NSArray *array) {
 	for (SBApplicationIcon *icon in appList) {
 		if ([[[icon application] process] isRunning]) [newAppList addObject:icon];
 	}
-	return newAppList;
+
+    return newAppList;
 }
 %end
 
