@@ -1,6 +1,6 @@
 /*
  * Tweak: 	RemoveRecents
- * Version:	0.4.0
+ * Version:	0.5.0
  * Creator: EvilPenguin (James Emrich)
  * 
  * Enjoy :0)
@@ -11,7 +11,7 @@
 #pragma mark -
 #pragma mark == Public Functions ==
 
-static id RemoveRecentsEditAppListArray(NSArray *array, BOOL isRunningIOS8) {
+static id RemoveRecentsEditAppListArray(NSArray *array, BOOL isRunningIOS8, BOOL isRunningIOS9) {
     if (array.count > 0) {
         NSMutableArray *newAppList = [NSMutableArray array];
         SBApplicationController *appController = [%c(SBApplicationController) sharedInstance];
@@ -34,6 +34,11 @@ static id RemoveRecentsEditAppListArray(NSArray *array, BOOL isRunningIOS8) {
                     }
                 }
 			}
+            // iOS9 Support
+            else if (isRunningIOS9) {
+                SBDisplayItem *displayItem = (SBDisplayItem *)object;
+                bundleIdentifier = displayItem.displayIdentifier;
+            }
 
             // Move along and remove the apps that are not running :)
         	if ([bundleIdentifier rangeOfString:@"com.apple.springboard"].location != NSNotFound) {
@@ -54,7 +59,7 @@ static id RemoveRecentsEditAppListArray(NSArray *array, BOOL isRunningIOS8) {
     	    }
         }
         
-        return newAppList;
+        return newAppList.copy;
     }
 
     return array;
@@ -63,21 +68,29 @@ static id RemoveRecentsEditAppListArray(NSArray *array, BOOL isRunningIOS8) {
 #pragma mark -
 #pragma mark == Hooking ==
 
-// iOS7, iOS8
 %hook SBAppSwitcherModel
+// iOS7, iOS8
 - (id) snapshot {
     id appList = %orig;
     
-    return RemoveRecentsEditAppListArray(appList, kCFCoreFoundationVersionNumber >= 1140.10);
+    return RemoveRecentsEditAppListArray(appList, kCFCoreFoundationVersionNumber >= 1140.10, NO);
 }
+
+// iOS 9
+- (id) displayItemsForAppsOfRoles:(id)arg1 {
+    id appList = %orig;
+
+    return RemoveRecentsEditAppListArray(appList, NO, YES);
+}
+
 %end
 
 %hook SBAppSwitcherController
 // iOS 6
 - (id) _bundleIdentifiersForViewDisplay {
 	id appList = %orig;
-	
-    return RemoveRecentsEditAppListArray(appList, kCFCoreFoundationVersionNumber >= 1140.10);
+
+    return RemoveRecentsEditAppListArray(appList, kCFCoreFoundationVersionNumber >= 1140.10, NO);
 }
 
 // iOS 5
@@ -104,5 +117,5 @@ static id RemoveRecentsEditAppListArray(NSArray *array, BOOL isRunningIOS8) {
 
     return newAppList;
 }
-%end
 
+%end

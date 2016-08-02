@@ -47,3 +47,11 @@
 - (id)_beginAppListAccess;
 @end
 
+@interface SBDisplayItem
+@property(readonly, copy, nonatomic) NSString *displayIdentifier;
+@end
+
+@interface SBSMSApplication
+- (BOOL) isRunning;
+@end
+
