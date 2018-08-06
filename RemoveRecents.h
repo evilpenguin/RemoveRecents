@@ -16,6 +16,7 @@
 
 @interface SBApplication
 - (id)process;
+- (id)processState;
 @end
 
 @interface SBApplicationIcon
@@ -35,7 +36,7 @@
 - (id)applicationWithDisplayIdentifier:(id)displayIdentifier;
 - (id)applicationsWithBundleIdentifier:(id)bundleIdentifier;
 - (id)applicationWithBundleIdentifier:(id)bundleIdentifier;
-- (BOOL) respondsToSelector:(SEL)selector;
+- (BOOL)respondsToSelector:(SEL)selector;
 @end
 
 @interface SBAppSwitcherBarView
@@ -52,6 +53,9 @@
 @end
 
 @interface SBSMSApplication
-- (BOOL) isRunning;
+- (BOOL)isRunning;
 @end
 
+@interface SBAppLayout
+- (id)allItems;
+@end
