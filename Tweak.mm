@@ -130,7 +130,7 @@ static NSArray *getRemoveRecentsArray(NSArray<id> *array) {
 
 // iOS 5
 - (id) _applicationIconsExceptTopApp {
-	id appList = %orig;
+  id appList = %orig;
 	
   NSMutableArray *newAppList = [NSMutableArray array];
   for (SBIconView *iconView in appList) {
