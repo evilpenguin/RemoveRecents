@@ -1,10 +1,10 @@
 # RemoveRecents
 - Remove recently launched apps from the switcher
 
-# Required
+Required
 ----------
 - iOS 4 - 13
 
-# Useage
+Useage
 ----------
 - Install and enjoy
