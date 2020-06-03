@@ -132,11 +132,11 @@ static NSArray *getRemoveRecentsArray(NSArray<id> *array) {
 - (id) _applicationIconsExceptTopApp {
 	id appList = %orig;
 	
-	NSMutableArray *newAppList = [NSMutableArray array];
+  NSMutableArray *newAppList = [NSMutableArray array];
   for (SBIconView *iconView in appList) {
-		id sbApplication = [iconView.icon application];
+    id sbApplication = [iconView.icon application];
     if ([[sbApplication process] isRunning]) [newAppList addObject:iconView];
-	}
+  }
 	
   return newAppList;
 }
