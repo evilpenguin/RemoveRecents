@@ -8,75 +8,100 @@
 
 #import "RemoveRecents.h"
 
-#pragma mark -
-#pragma mark == Public Functions ==
+#pragma mark - Private Functions
 
-static id getRemoveRecentsArray(NSArray *array) {
+NSString *bundleIdentifierForObject(id object) {
+  if (@available(iOS 13.0, *)) {
+    SBDisplayItem *displayItem = (SBDisplayItem *)[[object allItems] firstObject];
+    
+    return [displayItem bundleIdentifier];
+  }
+  else if (@available(iOS 11.0, *)) {
+    SBDisplayItem *displayItem = (SBDisplayItem *)[[object allItems] firstObject];
+
+    return [displayItem displayIdentifier];
+  } 
+  else if (@available(iOS 9.0, *)) {
+    SBDisplayItem *displayItem = (SBDisplayItem *)object;
+
+    return [displayItem displayIdentifier];
+  } 
+  else if (@available(iOS 8.0, *)) {
+    SBDisplayLayout *displayLayout = (SBDisplayLayout *)object;
+    NSDictionary *plistDict = [displayLayout plistRepresentation];
+
+    if ([plistDict count] > 0) {
+      NSArray *displayItemsArray = plistDict[@"SBDisplayLayoutDisplayItemsPlistKey"];
+      if (displayItemsArray.count > 0) {
+        NSDictionary *item = displayItemsArray.firstObject;
+        if ([item count] > 0) return item[@"SBDisplayItemDisplayIdentifierPlistKey"];
+      }
+    }
+  } 
+
+  return object;
+}
+
+static BOOL isAppRunning(id app) {
+  if (app) {
+    if ([app respondsToSelector:@selector(isRunning)]) return [app isRunning];
+    else if ([app respondsToSelector:@selector(processState)]) return [[app processState] isRunning];
+  }
+
+  return NO;
+}
+
+static NSArray *getRemoveRecentsArray(NSArray<id> *array) {
+  NSMutableArray *runningApps = nil;
+
   if (array.count > 0) {
-    NSMutableArray *newArray = [NSMutableArray array];
     SBApplicationController *appController = [%c(SBApplicationController) sharedInstance];
     
+    runningApps = [NSMutableArray array];
     for (id object in array) {
-      NSString *bundleIdentifier = NULL;
-      if (@available(iOS 11.0, *)) {
-        SBDisplayItem *displayItem = (SBDisplayItem *)[object allItems][0];
-        bundleIdentifier = [displayItem displayIdentifier];
-      } else if (@available(iOS 9.0, *)) {
-        SBDisplayItem *displayItem = (SBDisplayItem *)object;
-        bundleIdentifier = [displayItem displayIdentifier];
-      } else if (@available(iOS 8.0, *)) {
-        SBDisplayLayout *displayLayout = (SBDisplayLayout *)object;
-        NSDictionary *plistDict = [displayLayout plistRepresentation];
-        if ([plistDict count] > 0) {
-          NSArray *displayItemsArray = plistDict[@"SBDisplayLayoutDisplayItemsPlistKey"];
-          if ([displayItemsArray count] > 0) {
-            NSDictionary *item = displayItemsArray[0];
-            if ([item count] > 0) {
-              bundleIdentifier = item[@"SBDisplayItemDisplayIdentifierPlistKey"];
-            }
-          }
-        }
-      } else {
-        bundleIdentifier = object;
-      }
-      // Move along and remove the apps that are not running :)
+      // Get BundleID
+      NSString *bundleIdentifier = bundleIdentifierForObject(object);
+
+      // Check for SpringBoard
       if ([bundleIdentifier rangeOfString:@"com.apple.springboard"].location != NSNotFound) {
-        [newArray addObject:object];
-      } else {
-        // Use `applicationWithBundleIdentifier:` so we dont have to loop the array from `applicationsWithBundleIdentifier:`
+        [runningApps addObject:object];
+      } 
+      else {
+        // Lets get the app
         if ([appController respondsToSelector:@selector(applicationWithBundleIdentifier:)]) {
           id app = [appController applicationWithBundleIdentifier:bundleIdentifier];
-          if ([app respondsToSelector:@selector(isRunning)]) {
-            if ([app isRunning]) {
-              [newArray addObject:object];
-            }
-          } else {
-            if ([[app processState] isRunning]) {
-              [newArray addObject:object];
-            }
-          }
-        } else {
+          if (isAppRunning(app)) [runningApps addObject:object];
+        } 
+        // Lets look at the apps
+        else {
           NSArray *apps = [appController applicationsWithBundleIdentifier:bundleIdentifier];
           for (id app in apps) {
-            if ([app isRunning]) [newArray addObject:object];
+            if ([app isRunning]) [runningApps addObject:object];
           }
         }
       }
     }
-    return newArray;
   }
-  return array;
+
+  return runningApps;
 }
 
-#pragma mark -
-#pragma mark == Hooking ==
+#pragma mark - Hooking
 
 %hook SBAppSwitcherModel
-// iOS7, 8
-- (id) snapshot {
-  id appList = %orig;
-  
-  return getRemoveRecentsArray(appList);
+
+// iOS 13
+- (id) appLayoutsIncludingHiddenAppLayouts:(BOOL)arg1 {
+  id appLayouts = %orig;
+
+  return getRemoveRecentsArray(appLayouts);
+}
+
+// iOS 11 / 12
+- (id) mainSwitcherAppLayouts {
+  id appLayouts = %orig;
+
+  return getRemoveRecentsArray(appLayouts);
 }
 
 // iOS 9, 10
@@ -86,11 +111,11 @@ static id getRemoveRecentsArray(NSArray *array) {
   return getRemoveRecentsArray(appList);
 }
 
-// iOS 11
-- (id) mainSwitcherAppLayouts {
-  id appLayouts = %orig;
+// iOS 7, 8
+- (id) snapshot {
+  id appList = %orig;
   
-  return getRemoveRecentsArray(appLayouts);
+  return getRemoveRecentsArray(appList);
 }
 
 %end
@@ -98,7 +123,7 @@ static id getRemoveRecentsArray(NSArray *array) {
 %hook SBAppSwitcherController
 // iOS 6
 - (id) _bundleIdentifiersForViewDisplay {
-	id appList = %orig;
+  id appList = %orig;
 
   return getRemoveRecentsArray(appList);
 }
@@ -108,7 +133,7 @@ static id getRemoveRecentsArray(NSArray *array) {
 	id appList = %orig;
 	
 	NSMutableArray *newAppList = [NSMutableArray array];
-	for (SBIconView *iconView in appList) {
+  for (SBIconView *iconView in appList) {
 		id sbApplication = [iconView.icon application];
     if ([[sbApplication process] isRunning]) [newAppList addObject:iconView];
 	}

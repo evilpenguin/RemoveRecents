@@ -1,7 +1,7 @@
 Package: removerecents
 Name: Remove Recents
 Depends: mobilesubstrate
-Version: 1.6
+Version: 2.0
 Architecture: iphoneos-arm
 Description: Remove recently launched apps from the switcher. 
 Maintainer: EvilPenguin|

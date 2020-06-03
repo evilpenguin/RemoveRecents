@@ -50,6 +50,7 @@
 
 @interface SBDisplayItem
 @property(readonly, copy, nonatomic) NSString *displayIdentifier;
+@property (nonatomic,copy, readonly) NSString *bundleIdentifier;
 @end
 
 @interface SBSMSApplication

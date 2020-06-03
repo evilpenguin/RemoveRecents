@@ -1,8 +1,8 @@
-ARCHS = armv7 arm64
+THEOS_DEVICE_IP = 192.168.1.210
 
 include $(THEOS)/makefiles/common.mk
 TWEAK_NAME = RemoveRecents
-RemoveRecents_FILES = Tweak.xm
+$(TWEAK_NAME)_FILES = Tweak.xm
 include $(THEOS_MAKE_PATH)/tweak.mk
 
 after-install::
