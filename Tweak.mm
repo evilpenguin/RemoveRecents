@@ -1,6 +1,6 @@
 /*
  * Tweak: 	RemoveRecents
- * Version:	0.5.0
+ * Version:	2.0
  * Creator: EvilPenguin (James Emrich)
  * 
  * Enjoy :0)

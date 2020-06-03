@@ -1,7 +1,7 @@
 /*
- * Tweak: 	AppSwitcherClearRecents
- * Version:	0.3.4
- * Creator: EvilPenguin|
+ * Tweak: 	RemoveRecents
+ * Version:	2.0
+ * Creator: EvilPenguin (James Emrich)
  * 
  * Enjoy :0)
  */
